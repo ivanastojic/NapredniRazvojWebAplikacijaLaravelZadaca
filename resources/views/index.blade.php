@@ -1,5 +1,6 @@
 <!-- index.blade.php -->
 
+
 @extends('layout')
 
 @section('content')
@@ -8,12 +9,17 @@
     margin-top: 40px;
   }
 </style>
+
 <div class="uper">
+  {{-- Gumb za dodavanje novog proizvoda --}}
+  <a href="{{ route('products.create') }}" class="btn btn-success mb-3">+ Dodaj novi proizvod</a>
+
   @if(session()->get('success'))
     <div class="alert alert-success">
       {{ session()->get('success') }}  
     </div><br />
   @endif
+
   <table class="table table-striped">
     <thead>
         <tr>
@@ -41,6 +47,5 @@
         @endforeach
     </tbody>
   </table>
-<div>
-
+</div>
 @endsection

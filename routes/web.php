@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CategoryController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -28,3 +29,8 @@ Route::patch('/products/{id}', [ProductController::class, 'update'])->name('prod
 
 //Brisanje prizvoda
 Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
+
+
+Route::resource('categories', CategoryController::class);
+
+Route::resource('colors', ColorController::class);

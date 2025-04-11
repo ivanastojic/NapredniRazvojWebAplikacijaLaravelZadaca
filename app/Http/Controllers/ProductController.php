@@ -2,97 +2,100 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\Category;
+use App\Models\Color;
+use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // Prikaz svih proizvoda
     public function index()
     {
         $products = Product::all();
-        
-        return view('index',compact('products'));
-         //return "Ovo je stranica prizvoda!";
+        return view('index', compact('products'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    // Forma za kreiranje novog proizvoda
     public function create()
     {
-        return view('create');
+        $colors = Color::all();  // Preuzimamo sve boje
+        $categories = Category::all();  // Preuzimamo sve kategorije
+        return view('products.create', compact('colors','categories'));  // Šaljemo ih u formu
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    // Spremanje novog proizvoda
+    public function store(Request $request)
+    {
+        // Validacija podataka
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric',
+            'quantity' => 'required|integer|min:0',
+            'category_id' => 'required|exists:categories,id',  // Provjera da kategorija postoji
+            'colors' => 'nullable|array',  // Osiguravamo da su boje polje
+            'colors.*' => 'exists:colors,id',  // Provjeravamo postoji li svaka boja u tablici 'colors'
+        ]);
+    
+        // Kreiramo proizvod s validiranim podacima
+        $product = Product::create($validated);
+    
+        // Ako su odabrane boje, povezujemo ih s proizvodom
+        if ($request->has('colors')) {
+            $product->colors()->sync($request->colors); // sync povezuje proizvod s odabranim bojama
+        }
+    
+        // Preusmjeravamo na popis proizvoda
+        return redirect()->route('products.index');
+    }
 
-
-    /**
-     * Display the specified resource.
-     */
+    // Prikaz pojedinog proizvoda (opcionalno)
     public function show(string $id)
     {
-        //
+        $product = Product::findOrFail($id);
+        return view('products.show', compact('product'));  // Prikaz proizvoda
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
+    // Forma za uređivanje proizvoda
     public function edit($id)
     {
-        $Product = Product::findOrFail($id);
-        return view('edit', compact('Product'));
+        $product = Product::findOrFail($id);
+        $categories = Category::all();
+        $colors = Color::all();  // Preuzimamo sve boje
+        return view('products.edit', compact('product', 'categories', 'colors'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+    // Ažuriranje postojećeg proizvoda
     public function update(Request $request, $id)
     {
-        $validatedData = $request->validate([
-            'name' => 'required|max:255',
-            'description' => 'required',
-            'price' => 'required|numeric'
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'price' => 'required|numeric',
+            'quantity' => 'required|integer|min:0',
+            'category_id' => 'required|exists:categories,id',
+            'colors' => 'nullable|array',  // Osiguravamo da su boje polje
+            'colors.*' => 'exists:colors,id',  // Provjeravamo postoji li svaka boja u tablici 'colors'
         ]);
-        $product = Product::findOrFail($id);  // Osiguravamo da proizvod postoji
 
-        $product->update($validatedData);  // Ažuriramo proizvod s validiranim podacima
-    
-        // Vraćamo korisnika na listu proizvoda s porukom o uspjehu
-        return redirect()->route('products.index')->with('success', 'Product Data is successfully updated');
+        $product = Product::findOrFail($id);
+        $product->update($request->all());
 
+        // Ako su odabrane boje, poveži ih s proizvodom
+        if ($request->has('colors')) {
+            $product->colors()->sync($request->colors);  // sync povezuje proizvod s odabranim bojama
+        }
 
+        return redirect()->route('products.index')->with('success', 'Proizvod je uspješno ažuriran.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    // Brisanje proizvoda
     public function destroy(string $id)
     {
         $product = Product::findOrFail($id);
         $product->delete();
 
         return redirect()->route('products.index')->with('success', 'Proizvod je uspješno obrisan.');
-
-    }
-    public function store(Request $request)
-    {
-        // Validacija unesenih podataka
-        $validatedData = $request->validate([
-            'name' => 'required|max:255',
-            'description' => 'required|max:255',
-            'price' => 'required|numeric',
-        ]);
-
-        // Kreiranje novog proizvoda s validiranim podacima
-        $product = Product::create($validatedData);
-
-        // Preusmjeravanje na stranicu proizvoda s uspješnom porukom
-        return redirect('/products')->with('success', 'Product is successfully saved');
     }
 }
-
