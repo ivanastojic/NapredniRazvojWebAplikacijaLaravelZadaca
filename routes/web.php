@@ -34,3 +34,7 @@ Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('pr
 Route::resource('categories', CategoryController::class);
 
 Route::resource('colors', ColorController::class);
+
+Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
